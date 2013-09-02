@@ -2,6 +2,10 @@
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <Constants.au3>
+#include <Color.au3>
+
+
+
 
 $path = ""
 if FileExists(@ScriptDir & "\minecraft.exe") Then $path = @ScriptDir & "\minecraft.exe"
@@ -61,7 +65,7 @@ Func process($hRichEdit,$s)
 	If @error then return -1
 	ConsoleWrite(1&"	"&"r"&$a[0]&" : "&$a[1]&@CRLF)
 	if not $icolor.exists($a[0]) Then
-		$icolor.add($a[0],"0x"&Hex(Random(20,220,1),2)&Hex(Random(20,220,1),2)&Hex(Random(20,220,1),2))
+		$icolor.add($a[0],randcolor())
 	EndIf
 	$s = "r : "&$a[1]
 	$a2 = StringRegExp($s, "([\w\*])?(.*?)[§\r]",3)
@@ -78,12 +82,19 @@ EndFunc
 
 
 Func _GUICtrlRichEdit_AppendTextColor($hWnd, $sText, $iColor)
-Local $iLength = _GUICtrlRichEdit_GetTextLength($hWnd, True, True)
-Local $iCp = _GUICtrlRichEdit_GetCharPosOfNextWord($hWnd, $iLength)
-_GUICtrlRichEdit_AppendText($hWnd, $sText)
-_GUICtrlRichEdit_SetSel($hWnd, $iCp-1, $iLength + StringLen($sText))
-_GUICtrlRichEdit_SetCharColor($hWnd, $iColor)
-_GuiCtrlRichEdit_Deselect($hWnd)
+	Local $iLength = _GUICtrlRichEdit_GetTextLength($hWnd, True, True)
+	Local $iCp = _GUICtrlRichEdit_GetCharPosOfNextWord($hWnd, $iLength)
+	_GUICtrlRichEdit_AppendText($hWnd, $sText)
+	_GUICtrlRichEdit_SetSel($hWnd, $iCp-1, $iLength + StringLen($sText))
+	_GUICtrlRichEdit_SetCharColor($hWnd, $iColor)
+	_GuiCtrlRichEdit_Deselect($hWnd)
 EndFunc
 
-
+Func randcolor()
+	Local $a[3] = [Random(1,240,1), 240, 100], $ret = "0x"
+	$a = _ColorConvertHSLtoRGB($a)
+	for $i = 0 to 2
+		$ret &= Hex(Round($a[$i]),2)
+	Next
+	Return $ret
+EndFunc
