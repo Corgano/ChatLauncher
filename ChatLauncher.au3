@@ -5,17 +5,28 @@
 #include <Color.au3>
 
 
+if $CmdLine[0] = 0 Then	;when run by itself
 
+	AutoItWinSetTitle("ChatLauncher|"&@ScriptFullPath)	;the helper looks for this, and gets the script path from this
 
-$path = ""
-if FileExists(@ScriptDir & "\minecraft.exe") Then $path = @ScriptDir & "\minecraft.exe"
-if FileExists(@AppDataDir & "\.minecraft\minecraft.exe") Then $path = @AppDataDir & "\.minecraft\minecraft.exe"
-if $path = "" Then
-	MsgBox(0,"Error","Could not find minecraft.exe"&@crlf&"Place in the minecraft folder and run again")
-	Exit
+	If not WinExists("CLHelper") Then
+		ConsoleWrite("Starting CLHelper..."&@CRLF)
+		Run("CLHelper.exe")
+	Else
+		ConsoleWrite("Waiting for CLHelper"&@CRLF)
+	EndIf
+
+	while sleep(100)	;wait for the helper to close it. When the helper
+	WEnd
+
 EndIf
 
-$MC = Run($path, StringLeft($path, StringInStr($path, "\", -1)), Default, $STDERR_CHILD + $STDOUT_CHILD)
+
+Opt("GUICloseOnEsc",False)
+
+
+
+
 ConsoleWrite("hi"&@CRLF)
 $users = ObjCreate("Scripting.Dictionary")
 $icolor = ObjCreate("Scripting.Dictionary")
@@ -39,11 +50,11 @@ $icolor.add("f", "0xFFFFFF")
 
 Local $hGui, $hRichEdit, $iMsg
 
-$hGui = GUICreate("ChatLaunchChat", 320, 350, @DesktopWidth-320, 0)
-$hRichEdit = _GUICtrlRichEdit_Create($hGui, "", 10, 10, 300, 330, BitOR($ES_MULTILINE, $WS_VSCROLL, $ES_AUTOVSCROLL))
+$hGui = GUICreate("ChatLaunchChat", 320, 350, @DesktopWidth-320, 0, $WS_SIZEBOX)
+$hRichEdit = _GUICtrlRichEdit_Create($hGui, "", 0, 0, 300, 330, BitOR($ES_MULTILINE, $WS_VSCROLL, $ES_AUTOVSCROLL))
+_GUICtrlRichEdit_SetFont($hRichEdit, 10)
 GUISetState()
-
-
+GUIRegisterMsg($WM_SIZE, "WM_SIZE")
 
 While 1
     $iMsg = GUIGetMsg()
@@ -53,12 +64,12 @@ While 1
 			Exit
 	EndSelect
 
-	$line = StdoutRead($MC)
+	$line = ConsoleRead()
     If @error Then ExitLoop
-    If StringLen($line) > 3 Then
-		process($hRichEdit,$line)
-	EndIf
+    If StringLen($line) > 3 Then process($hRichEdit,$line)
+
 WEnd
+
 
 Func process($hRichEdit,$s)
 	$a = StringRegExp($s,".*\[CHAT\] <?([^<>\r\n ]*)\W? (.*)",3)
@@ -98,3 +109,12 @@ Func randcolor()
 	Next
 	Return $ret
 EndFunc
+
+Func WM_SIZE($hWnd, $iMsg, $wParam, $lParam)
+    Local $iWidth = _WinAPI_LoWord($lParam)
+    Local $iHeight = _WinAPI_HiWord($lParam)
+
+    _WinAPI_MoveWindow($hRichEdit, 2, 2, $iWidth - 4, $iHeight - 4)
+
+    Return 0
+EndFunc   ;==>WM_SIZE
